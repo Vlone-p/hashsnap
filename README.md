@@ -1,16 +1,16 @@
 # HashSnap
 
 A multi-threaded MD5 / SHA-1 / SHA-256 / SHA-512 / NTLM hash cracker
-written in C. Supports dictionary attacks (with a rule-based mutation
-engine), brute-force attacks, salted hashes, and **batch mode** —
+written in C. Supports dictionary attacks (with a rule based mutation
+engine), brute-force attacks, salted hashes, and **batch mode** 
 crack an entire file of leaked/dumped hashes in a single pass. All
 hash algorithms are implemented from scratch (no OpenSSL or other
-crypto library dependency) — pure C, POSIX threads only.
+crypto library dependency)  pure C, POSIX threads only.
 
 ## ⚠️ Authorized use only
 
 This tool is for **educational purposes and authorized security testing
-only** — e.g. auditing the strength of your own passwords/hashes, or
+only**  e.g. auditing the strength of your own passwords/hashes, or
 systems you have explicit written permission to test. Do not use it
 against hashes or accounts you don't own or lack authorization to test.
 
@@ -18,11 +18,11 @@ against hashes or accounts you don't own or lack authorization to test.
 
 - **Hash algorithms**: MD5, SHA-1, SHA-256, SHA-512, and **NTLM**
   (the Windows/Active Directory password hash format,
-  `MD4(UTF-16LE(password))`) — all implemented from the published
+  `MD4(UTF-16LE(password))`)  all implemented from the published
   specifications and verified against known test vectors.
 - **Batch mode**: point it at a file of `identifier:hash` (or
-  `identifier:hash:salt`) lines — like a dumped `/etc/shadow`-style
-  list, an NTLM dump from `secretsdump.py`, or a leaked user table —
+  `identifier:hash:salt`) lines  like a dumped `/etc/shadow`-style
+  list, an NTLM dump from `secretsdump.py`, or a leaked user table 
   and crack all of them in one pass over your wordlist/keyspace.
   When every hash shares the same salt (or has no salt), a hash table
   is used so each candidate is hashed once and checked against every
@@ -192,7 +192,7 @@ hashes — not 20 × 5. That's the batch hash-table lookup at work.
   UTF-16LE) — no external crypto library required anywhere.
 - **Batch matching**: all targets are loaded into a `target_t` array.
   If every target shares the same salt (including the common
-  no-salt-at-all case), a separate-chaining hash table keyed on the
+  no-salt-at-all case), a separate chaining hash table keyed on the
   first 8 bytes of each target digest is built once up front, so each
   candidate is hashed a single time and checked against all targets in
   O(1) average time. If salts differ per row, the tool falls back to
@@ -207,14 +207,14 @@ hashes — not 20 × 5. That's the batch hash-table lookup at work.
   cracked.
 - **Rules engine** (`src/rules.c`): generates a fixed set of mutations
   per word — capitalization, case changes, leetspeak substitution, and
-  suffix/combined-suffix variants — modeled on patterns commonly seen
+  suffix/combined-suffix variants   modeled on patterns commonly seen
   in real-world password reuse (e.g. `hunter2` → `Hunter2`,
   `hunter2023`).
 - **Brute-force mode**: candidates are generated on the fly by treating
-  the candidate space as a mixed-radix number system over the charset;
+  the candidate space as a mixed radix number system over the charset;
   each thread is assigned a distinct stride so no synchronization is
   needed except when reporting a match. (Not yet wired up to batch
-  mode — see "Possible extensions".)
+  mode   see "Possible extensions".)
 - **Threading**: a shared `remaining` counter (targets not yet cracked)
   is checked by all worker threads to stop promptly once every target
   in the job is found, or the wordlist/keyspace is exhausted.
@@ -254,11 +254,11 @@ hashsnap/
 
 ## Possible extensions
 
-- Brute-force mode for batch targets (currently dictionary-only)
-- bcrypt/scrypt/Argon2 support (adaptive KDFs — would need iteration
+- Brute force mode for batch targets (currently dictionary-only)
+- bcrypt/scrypt/Argon2 support (adaptive KDFs  would need iteration
   count handling, unlike the fixed-cost hashes here)
 - GPU acceleration (OpenCL/CUDA) for brute-force mode
-- Resume/checkpoint support for long-running jobs
+- Resume/checkpoint support for long running jobs
 - Rule files loaded from disk (Hashcat-style `.rule` syntax) instead of
-  the built-in fixed rule set
+  the built in fixed rule set
 - Auto-detect hash type from hash length/format
