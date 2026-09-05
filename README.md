@@ -29,17 +29,17 @@ against hashes or accounts you don't own or lack authorization to test.
   target in O(1) average time, instead of once per target.
 - **Salted hashes**: `-s <salt>` for a single global salt applied to
   every target, or a per-row salt column in a batch file (mixed salts
-  per row are supported — each is a real per-target check).
+  per row are supported  each is a real per target check).
   `--salt-mode prefix|suffix` controls whether the salt is prepended
   or appended.
 - **Rule-based mutation engine** (`-r`): for each dictionary word, also
-  tries common real-world variants — capitalization, all-caps, leetspeak
+  tries common real-world variants  capitalization, all-caps, leetspeak
   (`a→4`, `e→3`, `i→1`, `o→0`, `s→5`), and common suffixes (`1`, `123`,
   `!`, years, etc.), including combined patterns like `Password1`.
 - **Brute-force attack**: exhaustive search over a configurable character
   set and length range (single-hash mode).
 - **Result output** (`-o <file>`): writes `identifier:plaintext` for
-  each cracked hash as it's found — useful for feeding into other
+  each cracked hash as it's found  useful for feeding into other
   tooling or just keeping a record.
 - **Multi-threaded**, with live progress reporting (cracked/total,
   candidates tried, hashes/sec, elapsed time).
