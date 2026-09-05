@@ -1,0 +1,5 @@
+*.o
+hashsnap
+cracked.txt
+*.out
+.DS_Store
