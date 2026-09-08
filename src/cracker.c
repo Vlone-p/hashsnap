@@ -32,8 +32,6 @@ int parse_hex_hash(const char *hex, uint8_t *out, int expected_len) {
     return 1;
 }
 
-/* ---------- Digest computation (with optional salt) ---------- */
-
 void compute_digest(crack_job_t *job, const char *candidate, size_t len,
                      const uint8_t *salt, int salt_len, uint8_t *out) {
     uint8_t buf[512];
@@ -42,7 +40,7 @@ void compute_digest(crack_job_t *job, const char *candidate, size_t len,
 
     if (salt_len > 0 && job->salt_mode != SALT_NONE) {
         size_t total = len + (size_t)salt_len;
-        if (total > sizeof(buf)) total = sizeof(buf); /* safety clamp */
+        if (total > sizeof(buf)) total = sizeof(buf);
 
         if (job->salt_mode == SALT_PREFIX) {
             size_t sl = salt_len;
@@ -52,7 +50,7 @@ void compute_digest(crack_job_t *job, const char *candidate, size_t len,
             size_t cl = len < remaining ? len : remaining;
             memcpy(buf + sl, candidate, cl);
             input_len = sl + cl;
-        } else { /* SALT_SUFFIX */
+        } else {
             size_t cl = len;
             if (cl > sizeof(buf)) cl = sizeof(buf);
             memcpy(buf, candidate, cl);
@@ -72,8 +70,6 @@ void compute_digest(crack_job_t *job, const char *candidate, size_t len,
         case HASH_NTLM:   ntlm_hash(input, input_len, out); break;
     }
 }
-
-/* ---------- Hash table for fast batch lookups (uniform salt case) ---------- */
 
 static size_t next_pow2(size_t n) {
     size_t p = 1;
@@ -120,8 +116,6 @@ void free_htable(crack_job_t *job) {
     job->table.built = 0;
 }
 
-/* ---------- Matching a candidate against all targets ---------- */
-
 static int record_match(crack_job_t *job, target_t *t, const char *candidate) {
     pthread_mutex_lock(&job->lock);
     int newly = 0;
@@ -145,8 +139,7 @@ int check_candidate_all(crack_job_t *job, const char *candidate, size_t len) {
     int newly_found = 0;
 
     if (job->uniform_salt) {
-        /* Fast path: hash once (with the shared salt, if any), then
-         * look up via hash table against all targets. */
+
         uint8_t digest[MAX_DIGEST_LEN];
         int salt_len = job->target_count > 0 ? job->targets[0].salt_len : 0;
         const uint8_t *salt = job->target_count > 0 ? job->targets[0].salt : NULL;
@@ -164,10 +157,7 @@ int check_candidate_all(crack_job_t *job, const char *candidate, size_t len) {
             node = node->next;
         }
     } else {
-        /* Slow path: each target may have a distinct salt, so the
-         * candidate must be rehashed per target. This is inherent to
-         * how salts work: they specifically defeat shared
-         * precomputation across accounts. */
+
         for (size_t i = 0; i < job->target_count; ++i) {
             target_t *t = &job->targets[i];
             if (t->found) continue;
@@ -181,8 +171,6 @@ int check_candidate_all(crack_job_t *job, const char *candidate, size_t len) {
 
     return newly_found;
 }
-
-/* ---------- Dictionary + rules mode ---------- */
 
 void *dictionary_worker(void *arg) {
     crack_job_t *job = (crack_job_t *)arg;
@@ -219,8 +207,6 @@ void *dictionary_worker(void *arg) {
     return NULL;
 }
 
-/* ---------- Brute force mode ---------- */
-
 static void index_to_candidate(uint64_t index, int len, const char *charset,
                                 int charset_len, char *out) {
     for (int i = len - 1; i >= 0; --i) {
@@ -242,7 +228,7 @@ void *bruteforce_worker(void *arg) {
         uint64_t total = 1;
         for (int i = 0; i < len; ++i) {
             total *= (uint64_t)charset_len;
-            if (total > (uint64_t)1e15) break; /* sanity cap */
+            if (total > (uint64_t)1e15) break;
         }
 
         for (uint64_t idx = bargs->thread_id; idx < total; idx += bargs->num_threads) {

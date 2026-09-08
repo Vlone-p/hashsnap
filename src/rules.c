@@ -1,8 +1,3 @@
-/*
- * Simple rule based mutation engine, inspired by the kinds of rules
- * used in tools like Hashcat/John (leetspeak, capitalization,
- * common suffixes). This is a small, illustrative subset.
- */
 #include "rules.h"
 #include <string.h>
 #include <ctype.h>
@@ -44,23 +39,18 @@ static void upper(const char *in, char *out) {
 int generate_mutations(const char *word, char out[][MAX_WORD_LEN]) {
     int n = 0;
 
-    /* original */
     snprintf(out[n], MAX_WORD_LEN, "%s", word);
     n++;
 
-    /* capitalized */
     capitalize(word, out[n]);
     n++;
 
-    /* all uppercase */
     upper(word, out[n]);
     n++;
 
-    /* leetspeak */
     leet(word, out[n]);
     n++;
 
-    /* leetspeak + capitalized first char */
     {
         char tmp[MAX_WORD_LEN];
         leet(word, tmp);
@@ -68,7 +58,6 @@ int generate_mutations(const char *word, char out[][MAX_WORD_LEN]) {
         n++;
     }
 
-    /* word + common suffixes */
     for (int i = 0; i < NUM_SUFFIXES && n < MAX_MUTATIONS - 1; ++i) {
         size_t wl = strlen(word);
         size_t sl = strlen(suffixes[i]);
@@ -77,8 +66,6 @@ int generate_mutations(const char *word, char out[][MAX_WORD_LEN]) {
         n++;
     }
 
-    /* capitalized + common suffixes (e.g. "Password1", "Password123!"),
-     * an extremely common real world pattern */
     {
         char cap[MAX_WORD_LEN];
         capitalize(word, cap);

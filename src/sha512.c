@@ -1,7 +1,3 @@
-/*
- * SHA-512 implementation, based on FIPS PUB 180-4 pseudocode.
- * Clean room rewrite for this project.
- */
 #include "sha512.h"
 #include <string.h>
 
@@ -79,7 +75,7 @@ void sha512_init(SHA512_CTX *ctx) {
 static void add_bitlen(SHA512_CTX *ctx, uint64_t bits) {
     uint64_t old_lo = ctx->bitlen_lo;
     ctx->bitlen_lo += bits;
-    if (ctx->bitlen_lo < old_lo) ctx->bitlen_hi++; /* carry */
+    if (ctx->bitlen_lo < old_lo) ctx->bitlen_hi++;
 }
 
 void sha512_update(SHA512_CTX *ctx, const uint8_t data[], size_t len) {
@@ -109,7 +105,6 @@ void sha512_final(SHA512_CTX *ctx, uint8_t hash[64]) {
         memset(ctx->data, 0, 112);
     }
 
-    /* 128-bit big endian bit length: high 64 bits then low 64 bits */
     for (int j = 0; j < 8; ++j)
         ctx->data[112 + j] = (uint8_t)(ctx->bitlen_hi >> (56 - 8 * j));
     for (int j = 0; j < 8; ++j)

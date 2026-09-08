@@ -7,8 +7,7 @@
 int g_use_color = 0;
 
 void detect_color_support(void) {
-    /* Respect NO_COLOR convention, and only colorize when both
-     * streams are an actual terminal (not redirected to a file). */
+
     if (getenv("NO_COLOR")) {
         g_use_color = 0;
         return;

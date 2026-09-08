@@ -1,7 +1,3 @@
-/*
- * SHA-256 implementation, based on FIPS PUB 180-4 pseudocode.
- * Clean room rewrite for this project.
- */
 #include "sha256.h"
 #include <string.h>
 

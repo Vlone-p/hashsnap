@@ -1,8 +1,3 @@
-/*
- * MD5 implementation, based on RFC 1321 (public domain style reference
- * implementations are widely available; this is a clean room rewrite
- * following the RFC's pseudocode for use in this project).
- */
 #include "md5.h"
 #include <string.h>
 

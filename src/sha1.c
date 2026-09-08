@@ -1,7 +1,3 @@
-/*
- * SHA-1 implementation, based on FIPS PUB 180-4 pseudocode.
- * Clean room rewrite for this project.
- */
 #include "sha1.h"
 #include <string.h>
 

@@ -1,8 +1,3 @@
-/*
- * MD4 implementation, based on RFC 1320. Clean room rewrite following
- * the RFC's pseudocode. Used as the basis for NTLM password hashes
- * (NTLM = MD4(UTF-16LE(password))).
- */
 #include "md4.h"
 #include <string.h>
 
@@ -28,19 +23,16 @@ static void md4_transform(MD4_CTX *ctx, const uint8_t data[]) {
     c = ctx->state[2];
     d = ctx->state[3];
 
-    /* Round 1 */
     FF(a,b,c,d,X[0],3);   FF(d,a,b,c,X[1],7);   FF(c,d,a,b,X[2],11);  FF(b,c,d,a,X[3],19);
     FF(a,b,c,d,X[4],3);   FF(d,a,b,c,X[5],7);   FF(c,d,a,b,X[6],11);  FF(b,c,d,a,X[7],19);
     FF(a,b,c,d,X[8],3);   FF(d,a,b,c,X[9],7);   FF(c,d,a,b,X[10],11); FF(b,c,d,a,X[11],19);
     FF(a,b,c,d,X[12],3);  FF(d,a,b,c,X[13],7);  FF(c,d,a,b,X[14],11); FF(b,c,d,a,X[15],19);
 
-    /* Round 2 */
     GG(a,b,c,d,X[0],3);   GG(d,a,b,c,X[4],5);   GG(c,d,a,b,X[8],9);   GG(b,c,d,a,X[12],13);
     GG(a,b,c,d,X[1],3);   GG(d,a,b,c,X[5],5);   GG(c,d,a,b,X[9],9);   GG(b,c,d,a,X[13],13);
     GG(a,b,c,d,X[2],3);   GG(d,a,b,c,X[6],5);   GG(c,d,a,b,X[10],9);  GG(b,c,d,a,X[14],13);
     GG(a,b,c,d,X[3],3);   GG(d,a,b,c,X[7],5);   GG(c,d,a,b,X[11],9);  GG(b,c,d,a,X[15],13);
 
-    /* Round 3 */
     HH(a,b,c,d,X[0],3);   HH(d,a,b,c,X[8],9);   HH(c,d,a,b,X[4],11);  HH(b,c,d,a,X[12],15);
     HH(a,b,c,d,X[2],3);   HH(d,a,b,c,X[10],9);  HH(c,d,a,b,X[6],11);  HH(b,c,d,a,X[14],15);
     HH(a,b,c,d,X[1],3);   HH(d,a,b,c,X[9],9);   HH(c,d,a,b,X[5],11);  HH(b,c,d,a,X[13],15);

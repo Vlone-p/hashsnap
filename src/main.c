@@ -1,12 +1,3 @@
-/*
- * hashsnap: a multi threaded dictionary/brute force hash cracker
- * supporting MD5, SHA-1, SHA-256, SHA-512, and NTLM, with batch
- * cracking, salt support, and result file output.
- *
- * FOR AUTHORIZED SECURITY TESTING AND EDUCATIONAL USE ONLY.
- * Only use against hashes/systems you own or have explicit permission
- * to test.
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -109,9 +100,6 @@ static char **load_wordlist(const char *path, size_t *count_out) {
     return words;
 }
 
-/* Loads targets from a batch file. Each line: "id:hash" or
- * "id:hash:salt", or a bare hash with no identifier/salt. Returns 1
- * on success (fills job->targets/target_count), 0 on any parse error. */
 static int load_batch(const char *path, crack_job_t *job) {
     FILE *f = fopen(path, "r");
     if (!f) {
@@ -136,7 +124,7 @@ static int load_batch(const char *path, crack_job_t *job) {
 
         char *first_colon = strchr(buf, ':');
         if (!first_colon) {
-            /* bare hash, no identifier */
+
             hash_field = buf;
         } else {
             *first_colon = '\0';
@@ -207,7 +195,7 @@ static void *progress_reporter(void *arg) {
     crack_job_t *job = pargs->job;
 
     while (job->remaining > 0 && !*pargs->stop_flag) {
-        usleep(500000); /* 0.5s */
+        usleep(500000);
         double elapsed = now_seconds() - pargs->start_time;
         uint64_t attempts = job->attempts;
         double rate = elapsed > 0 ? attempts / elapsed : 0;
@@ -323,7 +311,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* Build target list */
     if (hash_hex) {
         target_t *t = malloc(sizeof(target_t));
         memset(t, 0, sizeof(target_t));
@@ -346,7 +333,7 @@ int main(int argc, char **argv) {
     } else {
         if (!load_batch(batch_path, &job)) return 1;
         if (global_salt) {
-            /* apply global salt to any target that didn't have its own */
+
             for (size_t i = 0; i < job.target_count; ++i) {
                 if (job.targets[i].salt_len == 0) {
                     size_t sl = strlen(global_salt);
@@ -359,7 +346,6 @@ int main(int argc, char **argv) {
     }
     job.remaining = job.target_count;
 
-    /* Determine whether all targets share the same salt (fast path) */
     job.uniform_salt = 1;
     for (size_t i = 1; i < job.target_count; ++i) {
         if (job.targets[i].salt_len != job.targets[0].salt_len ||
