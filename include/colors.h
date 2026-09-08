@@ -1,8 +1,6 @@
 #ifndef COLORS_H
 #define COLORS_H
 
-/* Set once at startup based on whether stdout is a real terminal
- * (so piping/redirecting output doesn't fill a file with escape codes). */
 extern int g_use_color;
 
 #define C_RESET   (g_use_color ? "\033[0m"  : "")

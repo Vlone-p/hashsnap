@@ -6,7 +6,7 @@
 
 typedef struct {
     uint64_t state[8];
-    uint64_t bitlen_lo, bitlen_hi; /* 128-bit length counter */
+    uint64_t bitlen_lo, bitlen_hi;
     uint8_t data[128];
     uint32_t datalen;
 } SHA512_CTX;
