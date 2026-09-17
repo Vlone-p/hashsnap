@@ -35,8 +35,9 @@ static void print_usage(const char *prog) {
     printf("    %s -h <hash> -t <type> -w <wordlist> [-r] [-j <threads>]\n\n", prog);
     printf("  Single hash, brute-force mode:\n");
     printf("    %s -h <hash> -t <type> -b -c <charset> --min <n> --max <n> [-j <threads>]\n\n", prog);
-    printf("  Batch mode (crack many hashes from a file in one pass):\n");
-    printf("    %s --batch <file> -t <type> -w <wordlist> [-r] [-j <threads>] [-o <outfile>]\n\n", prog);
+    printf("  Batch mode (crack many hashes from a file in one pass, dictionary or brute-force):\n");
+    printf("    %s --batch <file> -t <type> -w <wordlist> [-r] [-j <threads>] [-o <outfile>]\n", prog);
+    printf("    %s --batch <file> -t <type> -b -c <charset> --min <n> --max <n> [-j <threads>] [-o <outfile>]\n\n", prog);
     printf("Hash types: md5, sha1, sha256, sha512, ntlm\n\n");
     printf("Options:\n");
     printf("  -h <hash>       Target hash in hex (single-hash mode)\n");
@@ -45,7 +46,7 @@ static void print_usage(const char *prog) {
     printf("  -t <type>       Hash type: md5, sha1, sha256, sha512, ntlm\n");
     printf("  -w <file>       Wordlist file (dictionary mode)\n");
     printf("  -r              Apply mutation rules to each word (dictionary mode)\n");
-    printf("  -b              Enable brute-force mode (single-hash mode only)\n");
+    printf("  -b              Enable brute-force mode (single hash or batch)\n");
     printf("  -c <charset>    Character set for brute-force (e.g. \"abc0123\")\n");
     printf("  --min <n>       Minimum length for brute-force (default 1)\n");
     printf("  --max <n>       Maximum length for brute-force (default 6)\n");
@@ -60,6 +61,7 @@ static void print_usage(const char *prog) {
     printf("  %s --batch data/sample_ntlm_batch.txt -t ntlm -w data/sample_wordlist.txt -r -o cracked.txt\n", prog);
     printf("  %s --batch data/sample_salted_hashes.txt -t sha256 -w data/sample_wordlist.txt -r --salt-mode prefix\n", prog);
     printf("  %s -h aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d -t sha1 -b -c \"abcdefghijklmnopqrstuvwxyz0123456789\" --min 1 --max 5\n", prog);
+    printf("  %s --batch data/sample_ntlm_batch.txt -t ntlm -b -c \"abcdefghijklmnopqrstuvwxyz0123456789\" --min 1 --max 5\n", prog);
 }
 
 static int parse_hash_type(const char *s, hash_type_t *out) {
@@ -80,6 +82,7 @@ static char **load_wordlist(const char *path, size_t *count_out) {
 
     char **words = malloc(sizeof(char *) * MAX_WORDS);
     if (!words) {
+        print_err("Error: out of memory allocating wordlist\n");
         fclose(f);
         return NULL;
     }
@@ -92,7 +95,15 @@ static char **load_wordlist(const char *path, size_t *count_out) {
             line[--len] = '\0';
         }
         if (len == 0) continue;
-        words[count] = strdup(line);
+        char *w = strdup(line);
+        if (!w) {
+            print_err("Error: out of memory loading wordlist\n");
+            for (size_t i = 0; i < count; ++i) free(words[i]);
+            free(words);
+            fclose(f);
+            return NULL;
+        }
+        words[count] = w;
         count++;
     }
     fclose(f);
@@ -108,6 +119,11 @@ static int load_batch(const char *path, crack_job_t *job) {
     }
 
     target_t *targets = malloc(sizeof(target_t) * MAX_TARGETS);
+    if (!targets) {
+        print_err("Error: out of memory allocating target list\n");
+        fclose(f);
+        return 0;
+    }
     size_t count = 0;
     char line[512];
     int lineno = 0;
@@ -171,6 +187,11 @@ static int load_batch(const char *path, crack_job_t *job) {
         print_err("Error: no valid targets loaded from '%s'\n", path);
         free(targets);
         return 0;
+    }
+
+    if (count < MAX_TARGETS) {
+        target_t *shrunk = realloc(targets, sizeof(target_t) * count);
+        if (shrunk) targets = shrunk;
     }
 
     job->targets = targets;
@@ -277,10 +298,6 @@ int main(int argc, char **argv) {
         print_usage(argv[0]);
         return 1;
     }
-    if (batch_path && bruteforce) {
-        print_err("Error: brute-force mode doesn't support --batch (yet) -- use dictionary mode.\n\n");
-        return 1;
-    }
     if (!bruteforce && !wordlist_path) {
         print_err("Error: provide -w <wordlist> or -b for brute-force mode.\n\n");
         print_usage(argv[0]);
@@ -355,7 +372,10 @@ int main(int argc, char **argv) {
         }
     }
     if (job.uniform_salt) {
-        build_htable(&job);
+        if (!build_htable(&job)) {
+            print_warn("Warning: could not allocate hash table, falling back to per-target matching\n");
+            job.uniform_salt = 0;
+        }
     }
 
     if (output_path) {

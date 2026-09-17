@@ -83,11 +83,14 @@ static uint64_t digest_key(const uint8_t *digest) {
     return k;
 }
 
-void build_htable(crack_job_t *job) {
+int build_htable(crack_job_t *job) {
     size_t cap = next_pow2(job->target_count * 2 + 1);
     if (cap < 16) cap = 16;
 
     job->table.buckets = calloc(cap, sizeof(htable_node_t *));
+    if (!job->table.buckets) {
+        return 0;
+    }
     job->table.capacity = cap;
     job->table.built = 1;
 
@@ -96,10 +99,15 @@ void build_htable(crack_job_t *job) {
         size_t slot = key & (cap - 1);
 
         htable_node_t *node = malloc(sizeof(htable_node_t));
+        if (!node) {
+            free_htable(job);
+            return 0;
+        }
         node->target_index = i;
         node->next = job->table.buckets[slot];
         job->table.buckets[slot] = node;
     }
+    return 1;
 }
 
 void free_htable(crack_job_t *job) {
