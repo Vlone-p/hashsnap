@@ -76,6 +76,12 @@ This produces a single `hashsnap` binary.
 ./hashsnap --batch <file> -t <type> -w <wordlist_file> [-r] [-j threads] [-o <outfile>]
 ```
 
+or in brute force mode:
+
+```bash
+./hashsnap --batch <file> -t <type> -b -c <charset> --min <n> --max <n> [-j threads] [-o <outfile>]
+```
+
 **Batch file format**: one target per line.
 
 ```
@@ -102,7 +108,7 @@ labeled `line<N>` in output).
 | `-t <type>` | `md5`, `sha1`, `sha256`, `sha512`, or `ntlm` |
 | `-w <file>` | Wordlist file (dictionary mode) |
 | `-r` | Apply the mutation rule engine to each dictionary word |
-| `-b` | Enable brute force mode (single hash mode only) |
+| `-b` | Enable brute force mode (single hash or batch) |
 | `-c <charset>` | Character set for brute force, e.g. `"abcdefghijklmnopqrstuvwxyz0123456789"` |
 | `--min <n>` | Minimum candidate length for brute force (default 1) |
 | `--max <n>` | Maximum candidate length for brute force (default 6) |
@@ -139,6 +145,15 @@ Brute force a short SHA-1 hash over lowercase letters and digits, 1 to
 
 ```bash
 ./hashsnap -h aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d -t sha1 -b \
+  -c "abcdefghijklmnopqrstuvwxyz0123456789" --min 1 --max 5 -j 8
+```
+
+Brute force an entire batch of short NTLM hashes at once. The keyspace
+is swept once and checked against every uncracked target, not repeated
+per hash:
+
+```bash
+./hashsnap --batch data/sample_ntlm_batch.txt -t ntlm -b \
   -c "abcdefghijklmnopqrstuvwxyz0123456789" --min 1 --max 5 -j 8
 ```
 
@@ -216,8 +231,10 @@ hashes, not 20 times 5. That's the batch hash table lookup at work.
 - **Brute force mode**: candidates are generated on the fly by
   treating the candidate space as a mixed radix number system over the
   charset. Each thread is assigned a distinct stride so no
-  synchronization is needed except when reporting a match. (Not yet
-  wired up to batch mode, see "Possible extensions".)
+  synchronization is needed except when reporting a match. Works
+  against a single hash or a whole batch: the same keyspace sweep is
+  checked against every uncracked target at once, so cracking 50
+  hashes doesn't mean 50 separate brute force runs.
 - **Threading**: a shared `remaining` counter (targets not yet
   cracked) is checked by all worker threads to stop promptly once
   every target in the job is found, or the wordlist/keyspace is
@@ -258,7 +275,6 @@ hashsnap/
 
 ## Possible extensions
 
-- Brute force mode for batch targets (currently dictionary only)
 - bcrypt/scrypt/Argon2 support (adaptive KDFs would need iteration
   count handling, unlike the fixed cost hashes here)
 - GPU acceleration (OpenCL/CUDA) for brute force mode
