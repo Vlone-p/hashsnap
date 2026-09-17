@@ -75,7 +75,7 @@ typedef struct {
 void compute_digest(crack_job_t *job, const char *candidate, size_t len,
                      const uint8_t *salt, int salt_len, uint8_t *out);
 
-void build_htable(crack_job_t *job);
+int build_htable(crack_job_t *job);
 void free_htable(crack_job_t *job);
 
 int check_candidate_all(crack_job_t *job, const char *candidate, size_t len);
